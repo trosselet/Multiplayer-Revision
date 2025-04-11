@@ -2,6 +2,7 @@
 
 #include <WinSock2.h>
 #include <WS2tcpip.h>
+#include <string>
 #include <iostream>
 
 #pragma comment(lib, "Ws2_32.lib")
@@ -14,13 +15,15 @@
 class NetworkManager
 {
 public:
-	NetworkManager() = default;
-	virtual ~NetworkManager() = default;
+	NetworkManager();
+	virtual ~NetworkManager();
 
 	bool Connect(const char* ipAddress, unsigned int port, const char* name);
 	void HandleServerPackets(const void* packet);
 
 	void Run();
+
+	void Disconnect();
 
 	static NetworkManager* Get();
 
@@ -47,14 +50,15 @@ private:
 
 public:
 	bool m_isRunning;
-	CSocket* mp_socket;
-
-	const char* m_username;
 
 private:
 	CRITICAL_SECTION m_criticalSection;
+	sockaddr_in m_serverAddress;
+	CSocket* mp_socket;
 
 	const char* m_ip;
-	sockaddr_in m_serverAddress;
+	const char* m_username;
+	unsigned int m_userId;
+
 };
 

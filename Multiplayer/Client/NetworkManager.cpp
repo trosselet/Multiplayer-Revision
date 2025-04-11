@@ -1,40 +1,51 @@
 #include "NetworkManager.h"
 
+NetworkManager::NetworkManager() : m_criticalSection(), m_ip(0), m_isRunning(false), m_serverAddress(), m_username(0), mp_socket(nullptr),
+m_userId(0)
+{
+}
+
+NetworkManager::~NetworkManager()
+{
+	DeleteCriticalSection(&m_criticalSection);
+}
+
 bool NetworkManager::Connect(const char* ipAddress, unsigned int port, const char* name)
 {
+	InitializeCriticalSection(&m_criticalSection);
 	EnterCriticalSection(&m_criticalSection);
 
 	mp_socket = new CSocket();
 
-	if (mp_socket->Init(0))
+	if (!mp_socket->Init(0))
 	{
-		m_ip = ipAddress;
-
-		m_serverAddress = {};
-		m_serverAddress.sin_family = AF_INET;
-		m_serverAddress.sin_port = htons(port);
-		inet_pton(AF_INET, m_ip, &m_serverAddress.sin_addr);
-
-		CSocket::ConnectionRequestPacket requestConnection;
-		requestConnection.header.packetType = CSocket::CONNECTION_REQUEST;
-		requestConnection.header.userId = 0;
-		strncpy_s(requestConnection.name, name, sizeof(requestConnection));
-
-		char buffer[40];
-
-		memcpy(buffer, &requestConnection.header.packetType, 4);
-		memcpy(buffer, &requestConnection.header.userId, 8);
-		memcpy(buffer, &requestConnection.name, 32);
-
-		if (mp_socket->SendTo(m_ip, ntohs(m_serverAddress.sin_port), buffer, sizeof(buffer)))
-		{
-			return true;
-		}
-
+		std::cout << "Failed to init socket on client." << std::endl;
 		return false;
 	}
 
-	return false;
+	m_ip = ipAddress;
+
+	m_serverAddress = {};
+	m_serverAddress.sin_family = AF_INET;
+	m_serverAddress.sin_port = htons(port);
+	inet_pton(AF_INET, m_ip, &m_serverAddress.sin_addr);
+
+	CSocket::ConnectionRequestPacket requestConnection;
+	requestConnection.header.packetType = CSocket::CONNECTION_REQUEST;
+	requestConnection.header.userId = 0;
+	strncpy_s(requestConnection.name, name, sizeof(requestConnection.name));
+
+	std::cout << "Sending connection request to server at " << m_ip << ":" << port << std::endl;
+
+	if (!mp_socket->SendTo(m_ip, port, &requestConnection, sizeof(requestConnection)))
+	{
+		std::cerr << "Failed to send connection request to server. Error: " << WSAGetLastError() << std::endl;
+		return false;
+	}
+
+	std::cout << "Connection request sent to " << m_ip << ":" << port << std::endl;
+
+	return true;
 }
 
 void NetworkManager::HandleServerPackets(const void* packet)
@@ -47,6 +58,7 @@ void NetworkManager::HandleServerPackets(const void* packet)
 	{
 		const CSocket::ConnectionAcceptedPacket* answer = static_cast<const CSocket::ConnectionAcceptedPacket*>(packet);
 		m_username = answer->name;
+		m_userId = answer->header.userId;
 		std::cout << answer->name << ": " << answer->message << std::endl;
 
 		break;
@@ -71,8 +83,39 @@ void NetworkManager::Run()
 
 	while (m_isRunning)
 	{
+		std::string input;
+		std::getline(std::cin, input);
 
+		CSocket::SendRequestPacket packet = {};
+		packet.header.packetType = CSocket::SEND_REQUEST;
+		packet.header.userId = m_userId;
+		strcpy_s(packet.name, m_username);
+		strcpy_s(packet.message, input.c_str());
+
+		if (!mp_socket->SendTo(m_ip, ntohs(m_serverAddress.sin_port), &packet, sizeof(packet)))
+		{
+			std::cerr << "Failed to send message to server." << std::endl;
+		}
 	}
+}
+
+void NetworkManager::Disconnect()
+{
+	if (!mp_socket)
+		return;
+
+	CSocket::SendRequestPacket packet = {};
+	packet.header.packetType = CSocket::DISCONNECT_REQUEST;
+	packet.header.userId = m_userId;
+	strcpy_s(packet.name, m_username);
+	strcpy_s(packet.message, "Disconnected.");
+
+	if (!mp_socket->SendTo(m_ip, ntohs(m_serverAddress.sin_port), &packet, sizeof(packet)))
+	{
+		std::cerr << "Failed to send disconnect message to server." << std::endl;
+	}
+
+	m_isRunning = false;
 }
 
 NetworkManager* NetworkManager::Get()

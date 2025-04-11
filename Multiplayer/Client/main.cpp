@@ -1,6 +1,6 @@
-#include <Windows.h>
 
 #include "NetworkManager.h"
+#include <Windows.h>
 
 int main()
 {
@@ -18,6 +18,8 @@ int main()
 	{
 		return 1;
 	}
+
+	manager->Disconnect();
 
 	return 0;
 }

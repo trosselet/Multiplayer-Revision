@@ -29,8 +29,6 @@ void Server::HandlePacket(const char* packet, const sockaddr_in& from)
 {
 	const CSocket::Header* header = reinterpret_cast<const CSocket::Header*>(packet);
 
-	std::cout << "Packet type: " << header->packetType << std::endl;
-
 	switch (header->packetType)
 	{
 	case CSocket::CONNECTION_REQUEST:
@@ -55,10 +53,6 @@ void Server::HandlePacket(const char* packet, const sockaddr_in& from)
 		{
 			std::cerr << "Failed to send CONNECTION_ACCEPTED to " << ipStr << ":" << ntohs(from.sin_port) << std::endl;
 		}
-		else
-		{
-			std::cout << "Successfully sent CONNECTION_ACCEPTED to " << ipStr << ":" << ntohs(from.sin_port) << std::endl;
-		}
 
 		break;
 	}
@@ -78,10 +72,6 @@ void Server::HandlePacket(const char* packet, const sockaddr_in& from)
 			if (!m_socket.SendTo(ipStr, ntohs(addr.second.sin_port), req, sizeof(*req)))
 			{
 				std::cerr << "Failed to send message to " << ipStr << ":" << ntohs(addr.second.sin_port) << std::endl;
-			}
-			else
-			{
-				std::cout << "Successfully sent message to " << ipStr << ":" << ntohs(addr.second.sin_port) << std::endl;
 			}
 		}
 
@@ -112,10 +102,6 @@ void Server::HandlePacket(const char* packet, const sockaddr_in& from)
 			if (!m_socket.SendTo(ipStr, ntohs(addr.second.sin_port), req, sizeof(*req)))
 			{
 				std::cerr << "Failed to send message to " << ipStr << ":" << ntohs(addr.second.sin_port) << std::endl;
-			}
-			else
-			{
-				std::cout << "Successfully sent message to " << ipStr << ":" << ntohs(addr.second.sin_port) << std::endl;
 			}
 		}
 

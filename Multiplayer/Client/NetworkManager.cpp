@@ -43,6 +43,8 @@ bool NetworkManager::Connect(const char* ipAddress, unsigned int port, const cha
 
 	std::cout << "Connection request sent to " << m_ip << ":" << port << std::endl;
 
+	LeaveCriticalSection(&m_criticalSection);
+
 	return true;
 }
 

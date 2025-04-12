@@ -38,9 +38,9 @@ private:
 		{
 			if (manager->mp_socket->ReceiveFrom(buffer, sizeof(buffer), inputAddress))
 			{
-				//EnterCriticalSection(&manager->m_criticalSection);
+				EnterCriticalSection(&manager->m_criticalSection);
 				manager->HandleServerPackets(buffer);
-				//LeaveCriticalSection(&manager->m_criticalSection);
+				LeaveCriticalSection(&manager->m_criticalSection);
 			}
 		}
 

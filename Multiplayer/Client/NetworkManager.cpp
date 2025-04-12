@@ -3,6 +3,7 @@
 NetworkManager::NetworkManager() : m_criticalSection(), m_ip(0), m_isRunning(false), m_serverAddress(), m_username(0), mp_socket(nullptr),
 m_userId(0)
 {
+	InitializeCriticalSection(&m_criticalSection);
 }
 
 NetworkManager::~NetworkManager()
@@ -12,7 +13,6 @@ NetworkManager::~NetworkManager()
 
 bool NetworkManager::Connect(const char* ipAddress, unsigned int port, const char* name)
 {
-	InitializeCriticalSection(&m_criticalSection);
 	EnterCriticalSection(&m_criticalSection);
 
 	mp_socket = new CSocket();
@@ -34,8 +34,6 @@ bool NetworkManager::Connect(const char* ipAddress, unsigned int port, const cha
 	requestConnection.header.packetType = CSocket::CONNECTION_REQUEST;
 	requestConnection.header.userId = 0;
 	strncpy_s(requestConnection.name, name, sizeof(requestConnection.name));
-
-	std::cout << "Sending connection request to server at " << m_ip << ":" << port << std::endl;
 
 	if (!mp_socket->SendTo(m_ip, port, &requestConnection, sizeof(requestConnection)))
 	{
@@ -85,6 +83,12 @@ void NetworkManager::Run()
 	{
 		std::string input;
 		std::getline(std::cin, input);
+
+		if (input == "/quit")
+		{
+			Disconnect();
+			return;
+		}
 
 		CSocket::SendRequestPacket packet = {};
 		packet.header.packetType = CSocket::SEND_REQUEST;

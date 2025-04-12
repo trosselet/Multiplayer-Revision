@@ -51,8 +51,6 @@ void Server::HandlePacket(const char* packet, const sockaddr_in& from)
 		char ipStr[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &(from.sin_addr), ipStr, INET_ADDRSTRLEN);
 
-		std::cout << "Sending CONNECTION_ACCEPTED to: " << ipStr << ":" << ntohs(from.sin_port) << std::endl;
-
 		if (!m_socket.SendTo(ipStr, ntohs(from.sin_port), &response, sizeof(response)))
 		{
 			std::cerr << "Failed to send CONNECTION_ACCEPTED to " << ipStr << ":" << ntohs(from.sin_port) << std::endl;
@@ -76,8 +74,6 @@ void Server::HandlePacket(const char* packet, const sockaddr_in& from)
 		{
 			
 			inet_ntop(AF_INET, &(addr.second.sin_addr), ipStr, INET_ADDRSTRLEN);
-
-			std::cout << "Sending message to: " << ipStr << ":" << ntohs(addr.second.sin_port) << std::endl;
 
 			if (!m_socket.SendTo(ipStr, ntohs(addr.second.sin_port), req, sizeof(*req)))
 			{
@@ -104,7 +100,7 @@ void Server::HandlePacket(const char* packet, const sockaddr_in& from)
 
 		const CSocket::SendRequestPacket* req = reinterpret_cast<const CSocket::SendRequestPacket*>(packet);
 
-		std::cout << req->name << ": disocnnect from the chat" << std::endl;
+		std::cout << req->name << ": disconnect from the chat" << std::endl;
 
 		char ipStr[INET_ADDRSTRLEN];
 
@@ -112,8 +108,6 @@ void Server::HandlePacket(const char* packet, const sockaddr_in& from)
 		{
 
 			inet_ntop(AF_INET, &(addr.second.sin_addr), ipStr, INET_ADDRSTRLEN);
-
-			std::cout << "Sending message to: " << ipStr << ":" << ntohs(addr.second.sin_port) << std::endl;
 
 			if (!m_socket.SendTo(ipStr, ntohs(addr.second.sin_port), req, sizeof(*req)))
 			{

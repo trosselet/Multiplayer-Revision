@@ -19,7 +19,5 @@ int main()
 		return 1;
 	}
 
-	manager->Disconnect();
-
 	return 0;
 }

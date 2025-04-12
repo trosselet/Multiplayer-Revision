@@ -74,15 +74,20 @@ bool CSocket::ReceiveFrom(void* buffer, int bufferSize, sockaddr_in& fromAddress
     int fromSize = sizeof(fromAddress);
     int bytesReceived = recvfrom(m_socket, static_cast<char*>(buffer), bufferSize, 0, (sockaddr*)&fromAddress, &fromSize);
 
-if (bytesReceived == SOCKET_ERROR) {
-    int errorCode = WSAGetLastError();
-    std::cerr << "recvfrom failed with error: " << errorCode << std::endl;
+    if (bytesReceived == SOCKET_ERROR) 
+    {
+        int errorCode = WSAGetLastError();
+        std::cerr << "recvfrom failed with error: " << errorCode << std::endl;
     
-    if (errorCode == 10054) {
-        std::cerr << "The connection was forcibly closed by the remote host." << std::endl;
-    } else {
-        std::cerr << "Other error: " << errorCode << std::endl;
+        if (errorCode == 10054) 
+        {
+            std::cerr << "The connection was forcibly closed by the remote host." << std::endl;
+        } else 
+        {
+            std::cerr << "Other error: " << errorCode << std::endl;
+        }
+        return false;
     }
-    return false;
-}
+
+    return true;
 }
